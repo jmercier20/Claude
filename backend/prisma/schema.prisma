@@ -1,0 +1,489 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  AGENT
+  TECHNICAL
+  CLAIMS
+  FRAUD
+  EXECUTIVE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BLOCKED
+  VIP
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum CustomerSegment {
+  HVC   // High Value Customer
+  MVC   // Medium Value Customer
+  LVC   // Low Value Customer
+  NEW
+  AT_RISK
+  CHURNED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING_CUSTOMER
+  ESCALATED
+  RESOLVED
+  CLOSED
+  REOPENED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  CRITICAL
+}
+
+enum TicketCategory {
+  TECHNICAL
+  CLAIMS
+  FRAUD
+  BILLING
+  ACCOUNT
+  GENERAL
+  COMPLAINT
+  FEEDBACK
+}
+
+enum Department {
+  TECHNICAL
+  CLAIMS
+  FRAUD
+  BILLING
+  GENERAL
+  MANAGEMENT
+  COMPLIANCE
+}
+
+enum NoteType {
+  INTERNAL
+  EXTERNAL
+  SYSTEM
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+  ESCALATE
+  ASSIGN
+}
+
+enum NotificationType {
+  SLA_BREACH
+  TICKET_ASSIGNED
+  TICKET_UPDATED
+  TICKET_RESOLVED
+  ESCALATION
+  SYSTEM_ALERT
+  CUSTOMER_FLAGGED
+}
+
+enum InteractionType {
+  CALL_INBOUND
+  CALL_OUTBOUND
+  EMAIL
+  CHAT
+  WALK_IN
+  CALLBACK
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+model User {
+  id                String        @id @default(uuid())
+  employeeId        String        @unique
+  email             String        @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  role              UserRole      @default(AGENT)
+  status            UserStatus    @default(ACTIVE)
+  department        Department?
+  phone             String?
+  avatar            String?
+  lastLoginAt       DateTime?
+  lastLoginIp       String?
+  failedLoginCount  Int           @default(0)
+  lockedUntil       DateTime?
+  mustChangePassword Boolean      @default(false)
+  twoFactorEnabled  Boolean       @default(false)
+  twoFactorSecret   String?
+  refreshToken      String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  createdById       String?
+
+  // Relations
+  createdBy         User?         @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers      User[]        @relation("UserCreatedBy")
+  assignedTickets   Ticket[]      @relation("TicketAssignee")
+  createdTickets    Ticket[]      @relation("TicketCreator")
+  ticketNotes       TicketNote[]
+  interactions      Interaction[]
+  auditLogs         AuditLog[]    @relation("AuditUser")
+  notifications     Notification[]
+  slaEscalations    SlaEscalation[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([department])
+  @@map("users")
+}
+
+model Customer {
+  id              String          @id @default(uuid())
+  customerId      String          @unique // Human-readable ID e.g. CUST-000001
+  firstName       String
+  lastName        String
+  email           String?         @unique
+  phone           String?
+  alternatePhone  String?
+  dateOfBirth     DateTime?
+  governmentId    String?         // Encrypted
+  governmentIdType String?
+  nationality     String?
+  address         Json?           // Structured address object
+  status          CustomerStatus  @default(ACTIVE)
+  riskLevel       RiskLevel       @default(LOW)
+  segment         CustomerSegment @default(NEW)
+  tags            String[]        @default([])
+  notes           String?
+  preferredLanguage String?       @default("en")
+  totalDeposits   Decimal?        @db.Decimal(15, 2)
+  totalWithdrawals Decimal?       @db.Decimal(15, 2)
+  lifetimeValue   Decimal?        @db.Decimal(15, 2)
+  lastActivityAt  DateTime?
+  kycVerified     Boolean         @default(false)
+  kycVerifiedAt   DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdById     String?
+
+  // Relations
+  createdBy       User?           @relation(fields: [createdById], references: [id])
+  tickets         Ticket[]
+  interactions    Interaction[]
+  customerNotes   CustomerNote[]
+  fraudFlags      FraudFlag[]
+  auditLogs       AuditLog[]      @relation("AuditCustomer")
+
+  @@index([customerId])
+  @@index([email])
+  @@index([phone])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([segment])
+  @@index([createdAt])
+  @@map("customers")
+}
+
+model CustomerNote {
+  id          String      @id @default(uuid())
+  customerId  String
+  content     String
+  type        NoteType    @default(INTERNAL)
+  isPinned    Boolean     @default(false)
+  createdById String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdBy   User        @relation(fields: [createdById], references: [id])
+
+  @@index([customerId])
+  @@map("customer_notes")
+}
+
+model Ticket {
+  id              String          @id @default(uuid())
+  ticketId        String          @unique // Human-readable e.g. TKT-000001
+  customerId      String
+  assigneeId      String?
+  createdById     String
+  title           String
+  description     String
+  category        TicketCategory
+  department      Department
+  priority        TicketPriority  @default(MEDIUM)
+  status          TicketStatus    @default(OPEN)
+  tags            String[]        @default([])
+  attachments     Json[]          @default([])
+  internalRef     String?
+  resolutionNotes String?
+  slaDeadline     DateTime?
+  slaBreached     Boolean         @default(false)
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  reopenedAt      DateTime?
+  reopenCount     Int             @default(0)
+  escalationLevel Int             @default(0)
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  assignee        User?           @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  createdBy       User            @relation("TicketCreator", fields: [createdById], references: [id])
+  notes           TicketNote[]
+  statusHistory   TicketStatusHistory[]
+  slaEscalations  SlaEscalation[]
+  linkedTickets   TicketLink[]    @relation("TicketSource")
+  relatedTickets  TicketLink[]    @relation("TicketTarget")
+
+  @@index([ticketId])
+  @@index([customerId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@index([department])
+  @@index([category])
+  @@index([createdAt])
+  @@index([slaDeadline])
+  @@index([slaBreached])
+  @@map("tickets")
+}
+
+model TicketNote {
+  id          String      @id @default(uuid())
+  ticketId    String
+  authorId    String
+  content     String
+  type        NoteType    @default(INTERNAL)
+  attachments Json[]      @default([])
+  isEdited    Boolean     @default(false)
+  editedAt    DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  ticket      Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author      User        @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("ticket_notes")
+}
+
+model TicketStatusHistory {
+  id          String        @id @default(uuid())
+  ticketId    String
+  fromStatus  TicketStatus?
+  toStatus    TicketStatus
+  changedById String
+  reason      String?
+  createdAt   DateTime      @default(now())
+
+  ticket      Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("ticket_status_history")
+}
+
+model TicketLink {
+  id          String    @id @default(uuid())
+  sourceId    String
+  targetId    String
+  linkType    String    @default("related")
+  createdAt   DateTime  @default(now())
+
+  source      Ticket    @relation("TicketSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target      Ticket    @relation("TicketTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId])
+  @@map("ticket_links")
+}
+
+model SlaPolicy {
+  id              String          @id @default(uuid())
+  name            String          @unique
+  description     String?
+  priority        TicketPriority
+  category        TicketCategory?
+  department      Department?
+  responseTimeHrs Int             // Hours to first response
+  resolutionTimeHrs Int           // Hours to resolve
+  isActive        Boolean         @default(true)
+  escalateAfterHrs Int?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([priority])
+  @@map("sla_policies")
+}
+
+model SlaEscalation {
+  id          String    @id @default(uuid())
+  ticketId    String
+  escalatedTo String
+  level       Int       @default(1)
+  reason      String
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  ticket      Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [escalatedTo], references: [id])
+
+  @@index([ticketId])
+  @@map("sla_escalations")
+}
+
+model Interaction {
+  id              String          @id @default(uuid())
+  customerId      String
+  agentId         String
+  type            InteractionType
+  duration        Int?            // seconds
+  notes           String?
+  outcome         String?
+  callRecording   String?
+  satisfactionScore Int?          // 1-5
+  ticketId        String?
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  agent           User            @relation(fields: [agentId], references: [id])
+
+  @@index([customerId])
+  @@index([agentId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("interactions")
+}
+
+model FraudFlag {
+  id          String    @id @default(uuid())
+  customerId  String
+  flaggedById String
+  reason      String
+  severity    RiskLevel @default(MEDIUM)
+  evidence    Json?
+  isResolved  Boolean   @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  resolution  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  customer    Customer  @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([severity])
+  @@index([isResolved])
+  @@map("fraud_flags")
+}
+
+model Notification {
+  id          String            @id @default(uuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?
+  isRead      Boolean           @default(false)
+  readAt      DateTime?
+  createdAt   DateTime          @default(now())
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String        @id @default(uuid())
+  userId      String?
+  customerId  String?
+  action      AuditAction
+  resource    String
+  resourceId  String?
+  oldValue    Json?
+  newValue    Json?
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+
+  user        User?         @relation("AuditUser", fields: [userId], references: [id])
+  customer    Customer?     @relation("AuditCustomer", fields: [customerId], references: [id])
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model AutoAssignmentRule {
+  id          String          @id @default(uuid())
+  name        String
+  category    TicketCategory?
+  department  Department?
+  priority    TicketPriority?
+  assignToId  String?
+  isActive    Boolean         @default(true)
+  priority_order Int          @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("auto_assignment_rules")
+}
+
+model SystemSetting {
+  id          String    @id @default(uuid())
+  key         String    @unique
+  value       String
+  description String?
+  updatedById String?
+  updatedAt   DateTime  @updatedAt
+
+  @@map("system_settings")
+}
