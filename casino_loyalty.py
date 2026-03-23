@@ -17,7 +17,7 @@ from datetime import date
 DB_FILE = "casino_loyalty.db"
 
 GAMES = {
-    "Game1": 0.10,
+    "Boul":  0.10,
     "Game2": 0.20,
     "Game3": 0.30,
     "Game4": 0.40,
@@ -210,7 +210,7 @@ class CasinoApp(tk.Tk):
 
         # Game Selected
         tk.Label(form_frame, text="Game Selected:", **lbl_cfg).grid(row=2, column=0, sticky="w", pady=(0,4))
-        self._game_var = tk.StringVar(value="Game1")
+        self._game_var = tk.StringVar(value="Boul")
         game_combo = ttk.Combobox(
             form_frame, textvariable=self._game_var,
             values=list(GAMES.keys()), state="readonly",
