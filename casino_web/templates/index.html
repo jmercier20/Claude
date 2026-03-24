@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casino Loyalty Program</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* ── Title Bar ── */
+    header {
+      background: #16213e;
+      padding: 14px 0;
+      text-align: center;
+      border-bottom: 2px solid #ffd700;
+    }
+    header h1 {
+      color: #ffd700;
+      font-size: 1.6rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    /* ── Layout ── */
+    .main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 18px;
+      padding: 18px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    /* ── Panel / Card ── */
+    .card {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card h2 {
+      color: #ffd700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      color: #a0a0a0;
+      margin-bottom: 5px;
+    }
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #0f3460;
+      border: 1px solid #1a4a80;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .form-group select:focus,
+    .form-group input:focus { border-color: #ffd700; }
+
+    /* ── Bet Button ── */
+    #btn-place-bet {
+      width: 100%;
+      padding: 11px;
+      background: #ffd700;
+      color: #1a1a2e;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background .2s, transform .1s;
+      margin-top: 6px;
+    }
+    #btn-place-bet:hover  { background: #ffba00; }
+    #btn-place-bet:active { transform: scale(.98); }
+
+    /* ── Last Ticket Info ── */
+    #ticket-box {
+      margin-top: 18px;
+      background: #0f3460;
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+    #ticket-box h3 {
+      color: #ffd700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .ticket-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 3px 0;
+      border-bottom: 1px solid #1a4a80;
+    }
+    .ticket-row:last-child { border-bottom: none; }
+    .ticket-row .tk-label { color: #a0a0a0; }
+    .ticket-row .tk-val   { color: #ffffff; font-weight: 600; word-break: break-all; text-align: right; max-width: 180px; }
+
+    /* ── View All Tickets Button ── */
+    #btn-view-tickets {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 9px;
+      background: transparent;
+      border: 1px solid #ffd700;
+      border-radius: 6px;
+      color: #ffd700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    #btn-view-tickets:hover { background: #0f3460; }
+
+    /* ── Error Banner ── */
+    #error-banner {
+      display: none;
+      background: #7f1d1d;
+      border: 1px solid #ef4444;
+      border-radius: 5px;
+      padding: 8px 12px;
+      color: #fca5a5;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    /* ── Player Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 580px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    thead th {
+      background: #0f3460;
+      color: #ffd700;
+      padding: 10px 12px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    tbody tr { transition: background .15s; }
+    tbody tr:nth-child(even) { background: #0d1b38; }
+    tbody tr:nth-child(odd)  { background: #16213e; }
+    tbody td {
+      padding: 9px 12px;
+      text-align: center;
+      border-bottom: 1px solid #0f3460;
+    }
+    tbody tr.highlighted {
+      background: #1a3a1a !important;
+      outline: 2px solid #ffd700;
+    }
+    .tier-Bronze { color: #cd7f32; font-weight: 700; }
+    .tier-Silver { color: #c0c0c0; font-weight: 700; }
+    .tier-Gold   { color: #ffd700; font-weight: 700; }
+
+    /* ── Tier Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .badge-Bronze { background: #3d2000; color: #cd7f32; }
+    .badge-Silver { background: #2a2a2a; color: #c0c0c0; }
+    .badge-Gold   { background: #3d3000; color: #ffd700; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #16213e;
+      border: 1px solid #ffd700;
+      border-radius: 10px;
+      width: 92%;
+      max-width: 1000px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-header h2 { color: #ffd700; font-size: 1.1rem; }
+    #btn-close-modal {
+      background: none;
+      border: none;
+      color: #a0a0a0;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+    #btn-close-modal:hover { color: #fff; }
+    #btn-refresh-tickets {
+      padding: 6px 14px;
+      background: #0f3460;
+      border: 1px solid #ffd700;
+      border-radius: 5px;
+      color: #ffd700;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    #btn-refresh-tickets:hover { background: #1a4a80; }
+    .modal-table-wrap {
+      overflow: auto;
+      flex: 1;
+    }
+    .modal-table-wrap table thead th { font-size: 0.78rem; }
+    .modal-table-wrap table tbody td { font-size: 0.82rem; }
+    .ticket-num { font-family: monospace; font-size: 0.75rem; color: #93c5fd; }
+
+    /* ── Responsive ── */
+    @media (max-width: 800px) {
+      .main { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>♠ &nbsp;Casino Loyalty Program&nbsp; ♠</h1>
+</header>
+
+<div class="main">
+
+  <!-- ── Left: Bet Form ── -->
+  <aside>
+    <div class="card">
+      <h2>Place a Bet</h2>
+
+      <div id="error-banner"></div>
+
+      <div class="form-group">
+        <label for="player-id">Player Number (1–20)</label>
+        <select id="player-id">
+          {% for i in range(1, 21) %}
+          <option value="{{ i }}">Player {{ i }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="game">Game Selected</label>
+        <select id="game">
+          {% for g in games %}
+          <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="amount">Amount to Bet ($)</label>
+        <input type="number" id="amount" value="100" min="0.01" step="0.01" />
+      </div>
+
+      <div class="form-group">
+        <label for="date-played">Date Played</label>
+        <input type="date" id="date-played" value="{{ today }}" />
+      </div>
+
+      <button id="btn-place-bet">PLACE BET</button>
+
+      <!-- Last Ticket -->
+      <div id="ticket-box">
+        <h3>Last Ticket</h3>
+        <div class="ticket-row"><span class="tk-label">Ticket #</span><span class="tk-val" id="tk-number">—</span></div>
+        <div class="ticket-row"><span class="tk-label">Player</span><span class="tk-val" id="tk-player">—</span></div>
+        <div class="ticket-row"><span class="tk-label">Game</span><span class="tk-val" id="tk-game">—</span></div>
+        <div class="ticket-row"><span class="tk-label">Bet</span><span class="tk-val" id="tk-amount">—</span></div>
+        <div class="ticket-row"><span class="tk-label">Points</span><span class="tk-val" id="tk-points">—</span></div>
+        <div class="ticket-row"><span class="tk-label">Date</span><span class="tk-val" id="tk-date">—</span></div>
+      </div>
+
+      <button id="btn-view-tickets">View All Tickets</button>
+    </div>
+  </aside>
+
+  <!-- ── Right: Player Standings ── -->
+  <section>
+    <div class="card" style="height:100%;">
+      <h2>All Players — Live Standings</h2>
+      <div class="table-wrap">
+        <table id="players-table">
+          <thead>
+            <tr>
+              <th>Player ID</th>
+              <th>Total Wagered ($)</th>
+              <th>Total Points</th>
+              <th>Current Tier</th>
+            </tr>
+          </thead>
+          <tbody id="players-tbody">
+            <!-- filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── Ticket History Modal ── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Full Ticket History</h2>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button id="btn-refresh-tickets">Refresh</button>
+        <button id="btn-close-modal">&times;</button>
+      </div>
+    </div>
+    <div class="modal-table-wrap">
+      <table id="tickets-table">
+        <thead>
+          <tr>
+            <th>Ticket Number</th>
+            <th>Player</th>
+            <th>Game</th>
+            <th>Amount Bet ($)</th>
+            <th>Points Earned</th>
+            <th>Date Played</th>
+          </tr>
+        </thead>
+        <tbody id="tickets-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Helpers ──────────────────────────────────
+  const fmt  = (n) => Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const show = (id, html) => document.getElementById(id).innerHTML = html;
+
+  // ── Render Players ────────────────────────────
+  let lastPlayerId = null;
+
+  async function loadPlayers() {
+    const res   = await fetch('/api/players');
+    const rows  = await res.json();
+    const tbody = document.getElementById('players-tbody');
+    tbody.innerHTML = '';
+    rows.forEach(p => {
+      const isLast = p.player_id === lastPlayerId;
+      const tr = document.createElement('tr');
+      if (isLast) tr.classList.add('highlighted');
+      tr.innerHTML = `
+        <td>Player ${p.player_id}</td>
+        <td>$${fmt(p.total_wagered)}</td>
+        <td>${fmt(p.total_points)}</td>
+        <td><span class="badge badge-${p.tier}">${p.tier}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    // Scroll highlighted row into view
+    if (lastPlayerId) {
+      const highlighted = tbody.querySelector('tr.highlighted');
+      if (highlighted) highlighted.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  // ── Place Bet ─────────────────────────────────
+  document.getElementById('btn-place-bet').addEventListener('click', async () => {
+    const banner  = document.getElementById('error-banner');
+    banner.style.display = 'none';
+
+    const payload = {
+      player_id:   parseInt(document.getElementById('player-id').value),
+      game:        document.getElementById('game').value,
+      amount_bet:  parseFloat(document.getElementById('amount').value),
+      date_played: document.getElementById('date-played').value,
+    };
+
+    if (!payload.amount_bet || payload.amount_bet <= 0) {
+      banner.textContent = 'Please enter a valid positive bet amount.';
+      banner.style.display = 'block';
+      return;
+    }
+    if (!payload.date_played) {
+      banner.textContent = 'Please select a date.';
+      banner.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('btn-place-bet');
+    btn.disabled = true;
+    btn.textContent = 'Processing…';
+
+    try {
+      const res  = await fetch('/api/place_bet', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        banner.textContent = data.error || 'An error occurred.';
+        banner.style.display = 'block';
+        return;
+      }
+
+      const t = data.ticket;
+      lastPlayerId = t.player_id;
+
+      // Update last-ticket panel
+      document.getElementById('tk-number').textContent = t.ticket_number;
+      document.getElementById('tk-player').textContent = `Player ${t.player_id}`;
+      document.getElementById('tk-game').textContent   = t.game;
+      document.getElementById('tk-amount').textContent = `$${fmt(t.amount_bet)}`;
+      document.getElementById('tk-points').textContent = fmt(t.points_earned);
+      document.getElementById('tk-date').textContent   = t.date_played;
+
+      await loadPlayers();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'PLACE BET';
+    }
+  });
+
+  // ── Ticket History Modal ──────────────────────
+  async function loadTickets() {
+    const res   = await fetch('/api/tickets');
+    const rows  = await res.json();
+    const tbody = document.getElementById('tickets-tbody');
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#a0a0a0;text-align:center;padding:20px;">No tickets yet.</td></tr>';
+      return;
+    }
+    rows.forEach(t => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="ticket-num">${t.ticket_number}</td>
+        <td>Player ${t.player_id}</td>
+        <td>${t.game}</td>
+        <td>$${fmt(t.amount_bet)}</td>
+        <td>${fmt(t.points_earned)}</td>
+        <td>${t.date_played}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('btn-view-tickets').addEventListener('click', () => {
+    document.getElementById('modal-overlay').classList.add('open');
+    loadTickets();
+  });
+  document.getElementById('btn-close-modal').addEventListener('click', () => {
+    document.getElementById('modal-overlay').classList.remove('open');
+  });
+  document.getElementById('btn-refresh-tickets').addEventListener('click', loadTickets);
+  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modal-overlay'))
+      document.getElementById('modal-overlay').classList.remove('open');
+  });
+
+  // ── Initial Load ──────────────────────────────
+  loadPlayers();
+</script>
+
+</body>
+</html>
