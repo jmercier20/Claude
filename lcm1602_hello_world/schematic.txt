@@ -1,0 +1,34 @@
+LCM1602 to Arduino Mega 2560 — Wiring Schematic (4-bit mode)
+==============================================================
+
+  Arduino Mega 2560                        LCM1602 (16x2 LCD)
+  ─────────────────                        ──────────────────
+                                           Pin  Name
+  5V  ────────────────────────────────────  2   VDD
+  5V  ──┬─ 220Ω ─────────────────────────  15  A   (backlight +)
+        │
+  GND ──┴──────────────────────────────── 16   K   (backlight -)
+  GND ─────────────────────────────────── 1    VSS
+  GND ─────────────────────────────────── 5    RW  (always write)
+
+        10kΩ Potentiometer (contrast)
+        ┌────┬────┐
+  5V ───┤    │    ├─── GND
+        └────┘    │
+               wiper ─────────────────── 3    V0  (contrast adj.)
+
+  Pin 12 (RS) ────────────────────────── 4    RS
+  Pin 11 (E)  ────────────────────────── 6    E
+  Pin  5 (D4) ────────────────────────── 11   D4
+  Pin  4 (D5) ────────────────────────── 12   D5
+  Pin  3 (D6) ────────────────────────── 13   D6
+  Pin  2 (D7) ────────────────────────── 14   D7
+
+  Pins 7–10 (D0–D3) — leave unconnected (4-bit mode)
+
+==============================================================
+Component list:
+  - Arduino Mega 2560
+  - LCM1602 16x2 LCD module
+  - 10kΩ potentiometer  (contrast control)
+  - 220Ω resistor       (backlight current limiting)
