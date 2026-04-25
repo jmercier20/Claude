@@ -1,34 +1,48 @@
-LCM1602 to Arduino Mega 2560 — Wiring Schematic (4-bit mode)
-==============================================================
+LCM1602 (with I2C module) to Arduino Mega 2560 — Wiring Schematic
+==================================================================
 
-  Arduino Mega 2560                        LCM1602 (16x2 LCD)
-  ─────────────────                        ──────────────────
-                                           Pin  Name
-  5V  ────────────────────────────────────  2   VDD
-  5V  ──┬─ 220Ω ─────────────────────────  15  A   (backlight +)
-        │
-  GND ──┴──────────────────────────────── 16   K   (backlight -)
-  GND ─────────────────────────────────── 1    VSS
-  GND ─────────────────────────────────── 5    RW  (always write)
+  Arduino Mega 2560          I2C Module (PCF8574)
+  ─────────────────          on the back of LCM1602
+                             Pin  Name
+  5V  ──────────────────────  VCC
+  GND ──────────────────────  GND
+  Pin 20 (SDA) ─────────────  SDA
+  Pin 21 (SCL) ─────────────  SCL
 
-        10kΩ Potentiometer (contrast)
-        ┌────┬────┐
-  5V ───┤    │    ├─── GND
-        └────┘    │
-               wiper ─────────────────── 3    V0  (contrast adj.)
+  That's it — only 4 wires!
 
-  Pin 12 (RS) ────────────────────────── 4    RS
-  Pin 11 (E)  ────────────────────────── 6    E
-  Pin  5 (D4) ────────────────────────── 11   D4
-  Pin  4 (D5) ────────────────────────── 12   D5
-  Pin  3 (D6) ────────────────────────── 13   D6
-  Pin  2 (D7) ────────────────────────── 14   D7
+==================================================================
 
-  Pins 7–10 (D0–D3) — leave unconnected (4-bit mode)
+  Physical layout on the Mega 2560:
 
-==============================================================
+  [ Arduino Mega 2560 ]
+   ___________________________
+  |                           |
+  |  [20 SDA] ───────────────────────┐
+  |  [21 SCL] ────────────────────┐  │
+  |  [5V    ] ─────────────────┐  │  │
+  |  [GND   ] ──────────────┐  │  │  │
+  |_________________________|__|__|__|_|
+                             │  │  │  │
+                             │  │  │  │
+  [ LCM1602 I2C backpack  ]  │  │  │  │
+   ________________________  │  │  │  │
+  | GND  VCC  SDA  SCL    |  │  │  │  │
+  |  │    │    │    │     |  │  │  │  │
+  |  └────┘    └────┘     |──┘  └──┘  │
+  |_______________________|      └────┘
+
+==================================================================
+Notes:
+  - SDA = Pin 20 on Mega 2560
+  - SCL = Pin 21 on Mega 2560
+  - Default I2C address is 0x27
+    If the display stays blank, change to 0x3F in the code
+  - The I2C backpack has a small potentiometer for contrast —
+    adjust it with a screwdriver if text is not visible
+  - No extra resistors or potentiometers needed
+
 Component list:
   - Arduino Mega 2560
-  - LCM1602 16x2 LCD module
-  - 10kΩ potentiometer  (contrast control)
-  - 220Ω resistor       (backlight current limiting)
+  - LCM1602 16x2 LCD with I2C backpack (PCF8574)
+  - 4x jumper wires
