@@ -1,48 +1,38 @@
-LCM1602 (with I2C module) to Arduino Mega 2560 — Wiring Schematic
+LCM1602 (I2C) + LED + Button — Arduino Mega 2560 Wiring Schematic
 ==================================================================
 
-  Arduino Mega 2560          I2C Module (PCF8574)
-  ─────────────────          on the back of LCM1602
-                             Pin  Name
-  5V  ──────────────────────  VCC
-  GND ──────────────────────  GND
-  Pin 20 (SDA) ─────────────  SDA
-  Pin 21 (SCL) ─────────────  SCL
+  Arduino Mega 2560          LCM1602 I2C backpack
+  ─────────────────          ────────────────────
+  5V          ──────────────  VCC
+  GND         ──────────────  GND
+  Pin 20 (SDA)──────────────  SDA
+  Pin 21 (SCL)──────────────  SCL
 
-  That's it — only 4 wires!
+------------------------------------------------------------------
 
-==================================================================
+  LED (Pin 8)
 
-  Physical layout on the Mega 2560:
+  Pin 8 ──── 220Ω ──── LED (+) ──── LED (-) ──── GND
+                        Anode        Cathode
+                      (longer leg) (shorter leg)
 
-  [ Arduino Mega 2560 ]
-   ___________________________
-  |                           |
-  |  [20 SDA] ───────────────────────┐
-  |  [21 SCL] ────────────────────┐  │
-  |  [5V    ] ─────────────────┐  │  │
-  |  [GND   ] ──────────────┐  │  │  │
-  |_________________________|__|__|__|_|
-                             │  │  │  │
-                             │  │  │  │
-  [ LCM1602 I2C backpack  ]  │  │  │  │
-   ________________________  │  │  │  │
-  | GND  VCC  SDA  SCL    |  │  │  │  │
-  |  │    │    │    │     |  │  │  │  │
-  |  └────┘    └────┘     |──┘  └──┘  │
-  |_______________________|      └────┘
+------------------------------------------------------------------
+
+  Push Button (Pin 7)
+
+  Pin 7 ──────────────┤ Button ├──────────────── GND
+
+  (No external resistor needed — INPUT_PULLUP is used in code)
 
 ==================================================================
-Notes:
-  - SDA = Pin 20 on Mega 2560
-  - SCL = Pin 21 on Mega 2560
-  - Default I2C address is 0x27
-    If the display stays blank, change to 0x3F in the code
-  - The I2C backpack has a small potentiometer for contrast —
-    adjust it with a screwdriver if text is not visible
-  - No extra resistors or potentiometers needed
+Behavior:
+  Button NOT pressed → LED OFF, LCD blank
+  Button PRESSED     → LED ON,  LCD shows "Hello World"
 
 Component list:
   - Arduino Mega 2560
-  - LCM1602 16x2 LCD with I2C backpack (PCF8574)
-  - 4x jumper wires
+  - LCM1602 16x2 LCD with I2C backpack
+  - 1x LED (any color)
+  - 1x 220Ω resistor  (for LED)
+  - 1x push button / tactile switch
+  - Jumper wires
