@@ -5,6 +5,7 @@
 ArduinoLEDMatrix matrix;
 
 void showText(const char* text) {
+  matrix.clear();
   matrix.beginDraw();
   matrix.stroke(0xFFFFFFFF);
   matrix.textFont(Font_4x6);
