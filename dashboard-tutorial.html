@@ -508,6 +508,73 @@
       padding: 1px 8px;
       margin-bottom: 5px;
     }
+
+    /* ── SETTINGS PANEL ── */
+    .settings-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      z-index: 400; display: none;
+    }
+    .settings-overlay.show { display: block; }
+    .settings-panel {
+      position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
+      background: #fff; z-index: 500; box-shadow: -8px 0 40px rgba(0,0,0,.2);
+      display: flex; flex-direction: column;
+      transition: right .3s ease;
+    }
+    .settings-panel.open { right: 0; }
+    .settings-panel-header {
+      padding: 20px; border-bottom: 1px solid #eaecf5;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .settings-panel-header h2 { font-size: 16px; font-weight: 700; color: #1a1f36; }
+    .settings-close {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #f0f2f5; border: none; cursor: pointer;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+    }
+    .settings-close:hover { background: #fee2e2; color: #dc2626; }
+    .settings-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; }
+    .settings-section-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: #6b7394; margin-bottom: 12px;
+    }
+    .settings-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: #f8f9fc; border-radius: 8px; gap: 14px;
+    }
+    .settings-toggle-row .str-info .tl { font-size: 13px; font-weight: 600; color: #1a1f36; }
+    .settings-toggle-row .str-info .ts { font-size: 11px; color: #6b7394; margin-top: 2px; }
+    .stoggle {
+      width: 44px; height: 24px; border-radius: 12px; cursor: pointer;
+      position: relative; transition: background .2s; flex-shrink: 0;
+    }
+    .stoggle.on { background: #0d9488; }
+    .stoggle.off { background: #cbd5e1; }
+    .stoggle::after {
+      content: ''; position: absolute; width: 18px; height: 18px;
+      border-radius: 50%; background: #fff; top: 3px; transition: left .2s;
+    }
+    .stoggle.on::after { left: 23px; }
+    .stoggle.off::after { left: 3px; }
+    .widget-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-radius: 8px; border: 1px solid #eaecf5;
+      margin-bottom: 6px; background: #fff;
+    }
+    .widget-toggle-row .wt-label { font-size: 13px; color: #1a1f36; font-weight: 500; }
+    .widget-toggle-row .wt-desc { font-size: 11px; color: #6b7394; margin-top: 1px; }
+
+    /* Tutorial off */
+    body.tutorial-off .tutorial-zone:hover { box-shadow: none !important; }
+    body.tutorial-off .tooltip-box { display: none !important; }
+
+    /* Manage button in table */
+    .btn-manage {
+      background: #f0fdfa; color: #0d9488; border: 1px solid #0d9488;
+      border-radius: 5px; padding: 3px 9px; font-size: 11px; font-weight: 600;
+      text-decoration: none; white-space: nowrap; display: inline-block;
+    }
+    .btn-manage:hover { background: #ccfbf1; }
   </style>
 </head>
 <body>
@@ -518,6 +585,62 @@
 
 <!-- Toast notification -->
 <div class="toast" id="toast">✓ Tenant logo saved successfully!</div>
+
+<!-- SETTINGS PANEL -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-panel-header">
+    <h2>⚙️ Settings</h2>
+    <button class="settings-close" onclick="closeSettings()">✕</button>
+  </div>
+  <div class="settings-body">
+    <div>
+      <div class="settings-section-title">Tutorial Mode</div>
+      <div class="settings-toggle-row">
+        <div class="str-info">
+          <div class="tl">Tutorial Hover Tooltips</div>
+          <div class="ts">Show explanatory tooltips when hovering dashboard sections</div>
+        </div>
+        <div class="stoggle on" id="tutorialToggle" onclick="toggleTutorial(this)"></div>
+      </div>
+    </div>
+    <div>
+      <div class="settings-section-title">Dashboard Widgets</div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">KPI Summary Cards</div><div class="wt-desc">Total tenants, revenue, users, sync status</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-kpi')"></div>
+      </div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">Totals Summary &amp; System Health</div><div class="wt-desc">7-day trend chart and health donut</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-totals')"></div>
+      </div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">Sub Tenants Table</div><div class="wt-desc">Paginated list of all tenant accounts</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-tenants')"></div>
+      </div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">Alerts Feed</div><div class="wt-desc">Real-time system alerts and notifications</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-alerts')"></div>
+      </div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">Automation Controls</div><div class="wt-desc">Toggle platform automations on/off</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-automation')"></div>
+      </div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">Quick Actions</div><div class="wt-desc">One-click shortcuts for common tasks</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-quickactions')"></div>
+      </div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">Platform Usage</div><div class="wt-desc">Storage, bandwidth, API usage bars</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-usage')"></div>
+      </div>
+      <div class="widget-toggle-row">
+        <div><div class="wt-label">Recent Activities</div><div class="wt-desc">Live activity event stream</div></div>
+        <div class="stoggle on" onclick="toggleWidget(this,'widget-activity')"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="layout">
 
@@ -546,6 +669,7 @@
         The main landing page. Shows a bird's-eye summary of all sub-tenants, revenue, health, and activity — your daily command center.
       </div>
     </div>
+    <a href="sub-tenants.html" style="text-decoration:none;">
     <div class="tutorial-zone sidebar-item">
       <span class="icon">🏢</span> Sub Tenants
       <div class="tooltip-box">
@@ -554,6 +678,7 @@
         View and manage every sub-tenant (client) on the platform. Add, edit, suspend, or remove tenant accounts from here.
       </div>
     </div>
+    </a>
     <div class="tutorial-zone sidebar-item">
       <span class="icon">👥</span> Tenant Groups
       <div class="tooltip-box">
@@ -640,6 +765,7 @@
 
     <div class="sidebar-section-label">Administration</div>
 
+    <a href="users-roles.html" style="text-decoration:none;">
     <div class="tutorial-zone sidebar-item">
       <span class="icon">👤</span> Users &amp; Roles
       <div class="tooltip-box">
@@ -647,6 +773,7 @@
         Manage admin users and permission levels. Assign roles (Super Admin, Support, Read-Only).
       </div>
     </div>
+    </a>
     <div class="tutorial-zone sidebar-item">
       <span class="icon">🔌</span> Integrations
       <div class="tooltip-box">
@@ -654,11 +781,11 @@
         Connect third-party services — payment gateways, email providers, CRMs, and webhooks.
       </div>
     </div>
-    <div class="tutorial-zone sidebar-item">
+    <div class="tutorial-zone sidebar-item" onclick="openSettings()">
       <span class="icon">⚙️</span> Settings
       <div class="tooltip-box">
         <div class="tt-title">Settings</div>
-        Global platform configuration — branding, default plans, retention policies, notification preferences.
+        Global platform configuration — tutorial mode, widget visibility, branding, and notification preferences.
       </div>
     </div>
 
@@ -699,7 +826,7 @@
     </div>
 
     <!-- STAT CARDS -->
-    <div class="tutorial-zone" style="border-radius:10px;">
+    <div id="widget-kpi"><div class="tutorial-zone" style="border-radius:10px;">
       <div class="stat-row">
         <div class="stat-card">
           <div class="sc-top"><div class="sc-label">Total Sub Tenants</div><span class="sc-icon">👥</span></div>
@@ -737,10 +864,10 @@
         <div class="tt-title">Key Performance Indicators</div>
         Six at-a-glance numbers summarizing the entire platform. Green arrows = positive trends. <strong>MTD</strong> = Month-To-Date.
       </div>
-    </div>
+    </div></div>
 
     <!-- TOTALS SUMMARY + SYSTEM HEALTH -->
-    <div class="two-col">
+    <div id="widget-totals"><div class="two-col">
       <div class="tutorial-zone card">
         <div class="card-header">
           <h2>Totals Summary (From All Sub Tenants)</h2>
@@ -847,7 +974,7 @@
           </ul>
         </div>
       </div>
-    </div>
+    </div></div>
 
     <!-- MAIN LOWER SECTION -->
     <div style="display:grid; grid-template-columns: 1fr 380px; gap:16px;">
@@ -873,14 +1000,14 @@
             </tr>
           </thead>
           <tbody id="tenantTableBody">
-            <tr data-tenant="Acme Corp"><td>Acme Corp</td><td>Enterprise</td><td>1,245</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:12 AM</td><td>78 GB / 200 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:39%"></div></div></td><td>$12,450</td><td class="dots-btn">···</td></tr>
-            <tr data-tenant="Globex Inc"><td>Globex Inc</td><td>Professional</td><td>850</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:10 AM</td><td>45 GB / 100 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:45%"></div></div></td><td>$8,750</td><td class="dots-btn">···</td></tr>
-            <tr data-tenant="Initech"><td>Initech</td><td>Professional</td><td>620</td><td class="status-active">▲ Active</td><td class="health-warning">● Warning</td><td>May 21, 09:50 AM</td><td>95 GB / 100 GB<div class="storage-bar"><div class="storage-fill fill-yellow" style="width:95%"></div></div></td><td>$6,200</td><td class="dots-btn">···</td></tr>
-            <tr data-tenant="Soylent Corp"><td>Soylent Corp</td><td>Basic</td><td>120</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:11 AM</td><td>12 GB / 50 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:24%"></div></div></td><td>$980</td><td class="dots-btn">···</td></tr>
-            <tr data-tenant="Umbrella Corp"><td>Umbrella Corp</td><td>Enterprise</td><td>2,340</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:13 AM</td><td>120 GB / 200 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:60%"></div></div></td><td>$23,300</td><td class="dots-btn">···</td></tr>
-            <tr data-tenant="Stark Industries"><td>Stark Industries</td><td>Enterprise</td><td>3,210</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:09 AM</td><td>150 GB / 200 GB<div class="storage-bar"><div class="storage-fill fill-yellow" style="width:75%"></div></div></td><td>$28,900</td><td class="dots-btn">···</td></tr>
-            <tr data-tenant="Wayne Enterprises"><td>Wayne Enterprises</td><td>Professional</td><td>980</td><td class="status-suspended">▲ Suspended</td><td class="health-critical">● Critical</td><td>May 21, 08:15 AM</td><td>110 GB / 100 GB<div class="storage-bar"><div class="storage-fill fill-red" style="width:100%"></div></div></td><td>$0.00</td><td class="dots-btn">···</td></tr>
-            <tr data-tenant="Oscorp"><td>Oscorp</td><td>Basic</td><td>80</td><td class="status-active">▲ Active</td><td class="health-warning">● Warning</td><td>May 21, 09:40 AM</td><td>48 GB / 50 GB<div class="storage-bar"><div class="storage-fill fill-yellow" style="width:96%"></div></div></td><td>$450</td><td class="dots-btn">···</td></tr>
+            <tr data-tenant="Acme Corp"><td>Acme Corp</td><td>Enterprise</td><td>1,245</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:12 AM</td><td>78 GB / 200 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:39%"></div></div></td><td>$12,450</td><td><a href="sub-tenants.html?tenant=Acme Corp" class="btn-manage">Manage →</a></td></tr>
+            <tr data-tenant="Globex Inc"><td>Globex Inc</td><td>Professional</td><td>850</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:10 AM</td><td>45 GB / 100 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:45%"></div></div></td><td>$8,750</td><td><a href="sub-tenants.html?tenant=Globex Inc" class="btn-manage">Manage →</a></td></tr>
+            <tr data-tenant="Initech"><td>Initech</td><td>Professional</td><td>620</td><td class="status-active">▲ Active</td><td class="health-warning">● Warning</td><td>May 21, 09:50 AM</td><td>95 GB / 100 GB<div class="storage-bar"><div class="storage-fill fill-yellow" style="width:95%"></div></div></td><td>$6,200</td><td><a href="sub-tenants.html?tenant=Initech" class="btn-manage">Manage →</a></td></tr>
+            <tr data-tenant="Soylent Corp"><td>Soylent Corp</td><td>Basic</td><td>120</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:11 AM</td><td>12 GB / 50 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:24%"></div></div></td><td>$980</td><td><a href="sub-tenants.html?tenant=Soylent Corp" class="btn-manage">Manage →</a></td></tr>
+            <tr data-tenant="Umbrella Corp"><td>Umbrella Corp</td><td>Enterprise</td><td>2,340</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:13 AM</td><td>120 GB / 200 GB<div class="storage-bar"><div class="storage-fill fill-green" style="width:60%"></div></div></td><td>$23,300</td><td><a href="sub-tenants.html?tenant=Umbrella Corp" class="btn-manage">Manage →</a></td></tr>
+            <tr data-tenant="Stark Industries"><td>Stark Industries</td><td>Enterprise</td><td>3,210</td><td class="status-active">▲ Active</td><td class="health-healthy">● Healthy</td><td>May 21, 10:09 AM</td><td>150 GB / 200 GB<div class="storage-bar"><div class="storage-fill fill-yellow" style="width:75%"></div></div></td><td>$28,900</td><td><a href="sub-tenants.html?tenant=Stark Industries" class="btn-manage">Manage →</a></td></tr>
+            <tr data-tenant="Wayne Enterprises"><td>Wayne Enterprises</td><td>Professional</td><td>980</td><td class="status-suspended">▲ Suspended</td><td class="health-critical">● Critical</td><td>May 21, 08:15 AM</td><td>110 GB / 100 GB<div class="storage-bar"><div class="storage-fill fill-red" style="width:100%"></div></div></td><td>$0.00</td><td><a href="sub-tenants.html?tenant=Wayne Enterprises" class="btn-manage">Manage →</a></td></tr>
+            <tr data-tenant="Oscorp"><td>Oscorp</td><td>Basic</td><td>80</td><td class="status-active">▲ Active</td><td class="health-warning">● Warning</td><td>May 21, 09:40 AM</td><td>48 GB / 50 GB<div class="storage-bar"><div class="storage-fill fill-yellow" style="width:96%"></div></div></td><td>$450</td><td><a href="sub-tenants.html?tenant=Oscorp" class="btn-manage">Manage →</a></td></tr>
           </tbody>
         </table>
         <div class="showing-text" style="margin-top:10px;">Showing 1 to 8 of 56 tenants</div>
@@ -956,7 +1083,7 @@
       <!-- RIGHT RAIL -->
       <div style="display:flex; flex-direction:column; gap:16px;">
 
-        <div class="tutorial-zone card">
+        <div id="widget-alerts" class="tutorial-zone card">
           <div class="card-header">
             <h2>Alerts</h2>
             <span class="view-all">View all</span>
@@ -980,7 +1107,7 @@
           </div>
         </div>
 
-        <div class="tutorial-zone card">
+        <div id="widget-automation" class="tutorial-zone card">
           <div class="card-header">
             <h2>Automation Controls</h2>
             <span class="view-all">Manage</span>
@@ -1005,7 +1132,7 @@
           </div>
         </div>
 
-        <div class="tutorial-zone card">
+        <div id="widget-quickactions" class="tutorial-zone card">
           <div class="card-header"><h2>Quick Actions</h2></div>
           <div class="quick-actions">
             <div class="qa-item"><div class="qa-icon" style="background:#ccfbf1;">🔄</div><div class="qa-info"><div class="qa-name">Sync Totals Now</div><div class="qa-desc">Trigger immediate totals sync for all tenants</div></div></div>
@@ -1032,7 +1159,7 @@
     <!-- PLATFORM USAGE + RECENT ACTIVITY -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
 
-      <div class="tutorial-zone card">
+      <div id="widget-usage" class="tutorial-zone card">
         <div class="card-header"><h2>Platform Usage (All Tenants)</h2></div>
         <div class="usage-stats">
           <div class="usage-row">
@@ -1064,7 +1191,7 @@
         </div>
       </div>
 
-      <div class="tutorial-zone card">
+      <div id="widget-activity" class="tutorial-zone card">
         <div class="card-header">
           <h2>Recent Activities</h2>
           <span class="view-all">View all</span>
@@ -1198,6 +1325,33 @@
       if (target) target.classList.add('active');
     });
   });
+
+  // ── SETTINGS PANEL ──
+  function openSettings() {
+    document.getElementById('settingsPanel').classList.add('open');
+    document.getElementById('settingsOverlay').classList.add('show');
+  }
+  function closeSettings() {
+    document.getElementById('settingsPanel').classList.remove('open');
+    document.getElementById('settingsOverlay').classList.remove('show');
+  }
+
+  // Tutorial toggle
+  function toggleTutorial(el) {
+    el.classList.toggle('on');
+    el.classList.toggle('off');
+    document.body.classList.toggle('tutorial-off', el.classList.contains('off'));
+  }
+
+  // Widget toggle
+  function toggleWidget(toggleEl, widgetId) {
+    toggleEl.classList.toggle('on');
+    toggleEl.classList.toggle('off');
+    const widget = document.getElementById(widgetId);
+    if (widget) {
+      widget.style.display = toggleEl.classList.contains('on') ? '' : 'none';
+    }
+  }
 </script>
 </body>
 </html>
