@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Users &amp; Roles – FMGaming</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;color:#1a1f36;min-height:100vh;}
+a{text-decoration:none;color:inherit;}
+.layout{display:flex;min-height:100vh;}
+/* SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;background:#0f1923;color:#a8b0c8;display:flex;flex-direction:column;padding-bottom:20px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-logo{padding:16px 14px 14px;border-bottom:1px solid #1e2d3d;display:flex;align-items:center;gap:10px;}
+.sidebar-logo .brand{font-size:15px;font-weight:800;color:#fff;}
+.sidebar-logo .sub{font-size:10px;color:#0d9488;margin-top:1px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+.sidebar-section-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2e4a5a;padding:18px 16px 6px;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;cursor:pointer;transition:background .15s;}
+.sidebar-item:hover{background:#1a2e3d;color:#fff;}
+.sidebar-item.active{background:#0d9488;color:#fff;border-radius:6px;margin:0 8px;padding:9px 10px;}
+.sidebar-item .icon{font-size:15px;width:18px;text-align:center;}
+.collapse-btn{margin-top:auto;padding:12px 16px;font-size:13px;color:#2e4a5a;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid #1e2d3d;}
+/* MAIN */
+.main{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0;}
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.topbar-title h1{font-size:22px;font-weight:700;}
+.topbar-title p{font-size:13px;color:#6b7394;margin-top:2px;}
+.topbar-controls{display:flex;align-items:center;gap:10px;}
+.avatar{width:34px;height:34px;border-radius:50%;background:#0d9488;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+/* ACTION BAR */
+.action-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.search-input{background:#fff;border:1px solid #dde1ef;border-radius:8px;padding:9px 14px;font-size:13px;width:260px;font-family:inherit;}
+.search-input:focus{outline:none;border-color:#0d9488;}
+.filter-select{background:#fff;border:1px solid #dde1ef;border-radius:8px;padding:9px 12px;font-size:13px;color:#4a5278;cursor:pointer;font-family:inherit;}
+.btn-create{background:#0d9488;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto;}
+.btn-create:hover{background:#0f766e;}
+/* CONTENT */
+.content-area{display:flex;gap:20px;align-items:flex-start;}
+/* USER TABLE */
+.user-table-card{flex:1;min-width:0;background:#fff;border-radius:10px;border:1px solid #eaecf5;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;color:#6b7394;font-weight:600;font-size:11px;padding:10px 14px;border-bottom:1px solid #eaecf5;background:#fafafa;}
+td{padding:12px 14px;border-bottom:1px solid #f0f2f5;color:#1a1f36;}
+tr:last-child td{border-bottom:none;}
+tbody tr{cursor:pointer;transition:background .12s;}
+tbody tr:hover td{background:#f0fdfa;}
+tbody tr.selected td{background:#ccfbf1;}
+.user-cell{display:flex;align-items:center;gap:10px;}
+.u-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;}
+.u-name{font-size:13px;font-weight:600;color:#1a1f36;}
+.u-email{font-size:11px;color:#6b7394;margin-top:1px;}
+/* ROLE BADGES */
+.role-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.role-super{background:#ede9fe;color:#7c3aed;}
+.role-admin{background:#ccfbf1;color:#0f766e;}
+.role-support{background:#dbeafe;color:#1d4ed8;}
+.role-billing{background:#fed7aa;color:#c2410c;}
+.role-readonly{background:#f0f2f5;color:#6b7394;}
+.role-custom{background:#dcfce7;color:#166534;}
+/* STATUS */
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.status-active{background:#dcfce7;color:#166534;}
+.status-inactive{background:#fee2e2;color:#dc2626;}
+.btn-edit{background:#f0fdfa;color:#0d9488;border:1px solid #0d9488;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;}
+.btn-edit:hover{background:#ccfbf1;}
+/* FORM PANEL */
+.form-panel{width:420px;flex-shrink:0;background:#fff;border-radius:10px;border:1px solid #eaecf5;overflow:hidden;}
+.panel-header{padding:16px 18px;border-bottom:1px solid #eaecf5;display:flex;align-items:center;justify-content:space-between;}
+.panel-header h2{font-size:15px;font-weight:700;color:#1a1f36;}
+.panel-body{padding:18px;display:flex;flex-direction:column;gap:18px;max-height:calc(100vh - 200px);overflow-y:auto;}
+/* FORM */
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+label.field-label{font-size:12px;font-weight:600;color:#4a5278;}
+input[type=text],input[type=email],input[type=password],textarea{width:100%;border:1px solid #dde1ef;border-radius:7px;padding:8px 12px;font-size:13px;color:#1a1f36;background:#fff;font-family:inherit;}
+input:focus,textarea:focus{outline:none;border-color:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,.1);}
+/* AVATAR UPLOADER */
+.avatar-uploader{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid #eaecf5;}
+.avatar-big{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff;background:#0d9488;flex-shrink:0;cursor:pointer;position:relative;overflow:hidden;}
+.avatar-big img{width:100%;height:100%;object-fit:cover;display:none;}
+.avatar-big .upload-hint{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;font-size:10px;text-align:center;color:#fff;}
+.avatar-big:hover .upload-hint{display:flex;}
+.avatar-info p{font-size:11px;color:#6b7394;margin-top:3px;}
+/* ROLE CARDS */
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.role-card{border:2px solid #eaecf5;border-radius:8px;padding:10px;cursor:pointer;transition:border-color .15s;}
+.role-card:hover{border-color:#a7f3d0;}
+.role-card.selected{border-color:#0d9488;background:#f0fdfa;}
+.role-card .rc-icon{font-size:20px;margin-bottom:4px;}
+.role-card .rc-name{font-size:12px;font-weight:700;color:#1a1f36;}
+.role-card .rc-desc{font-size:10px;color:#6b7394;margin-top:2px;line-height:1.4;}
+/* CUSTOM PERMS */
+.perm-section{margin-bottom:10px;}
+.perm-section-title{font-size:11px;font-weight:700;color:#4a5278;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.perm-checkboxes{display:flex;flex-wrap:wrap;gap:6px;}
+.perm-check{display:flex;align-items:center;gap:5px;font-size:11px;color:#4a5278;cursor:pointer;}
+.perm-check input{accent-color:#0d9488;}
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
+.toggle-info .tl{font-size:13px;font-weight:600;color:#1a1f36;}
+.toggle-info .ts{font-size:11px;color:#6b7394;margin-top:1px;}
+.toggle-switch{width:40px;height:22px;border-radius:11px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.toggle-switch.on{background:#0d9488;}
+.toggle-switch.off{background:#cbd5e1;}
+.toggle-switch::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;transition:left .2s;}
+.toggle-switch.on::after{left:21px;}
+.toggle-switch.off::after{left:3px;}
+/* PERM MATRIX */
+.perm-matrix{margin-top:4px;}
+.perm-matrix table{font-size:11px;}
+.perm-matrix th{font-size:10px;padding:5px 8px;text-align:center;}
+.perm-matrix td{padding:5px 8px;text-align:center;}
+.perm-matrix td:first-child{text-align:left;font-weight:600;color:#4a5278;}
+.check-yes{color:#0d9488;font-size:14px;}
+.check-no{color:#dde1ef;font-size:14px;}
+/* PANEL FOOTER */
+.panel-footer{padding:14px 18px;border-top:1px solid #eaecf5;display:flex;gap:8px;background:#fafafa;}
+.btn{border:none;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-teal{background:#0d9488;color:#fff;}
+.btn-teal:hover{background:#0f766e;}
+.btn-outline{background:#fff;color:#4a5278;border:1px solid #dde1ef;}
+.btn-outline:hover{background:#f0f2f5;}
+.btn-danger{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;}
+.btn-danger:hover{background:#fecaca;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;display:none;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:24px;width:360px;max-width:90vw;}
+.modal h3{font-size:15px;font-weight:700;color:#dc2626;margin-bottom:8px;}
+.modal p{font-size:13px;color:#4a5278;margin-bottom:16px;line-height:1.5;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#0d9488;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(13,148,136,.4);transform:translateY(80px);opacity:0;transition:transform .3s,opacity .3s;z-index:999;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.error{background:#dc2626;}
+.section-divider{font-size:12px;font-weight:700;color:#4a5278;padding-bottom:8px;border-bottom:1px solid #eaecf5;}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect width="38" height="38" rx="8" fill="#0d9488"/><text x="4" y="26" font-family="Arial Black,Arial" font-weight="900" font-size="18" fill="#fff">FM</text><rect x="4" y="28" width="30" height="3" rx="1.5" fill="#5eead4"/></svg>
+    <div><div class="brand">FMGaming</div><div class="sub">Central Dashboard</div></div>
+  </div>
+  <div class="sidebar-section-label">Tenant Management</div>
+  <a href="dashboard-tutorial.html" class="sidebar-item"><span class="icon">🏠</span>Overview</a>
+  <a href="sub-tenants.html" class="sidebar-item"><span class="icon">🏢</span>Sub Tenants</a>
+  <div class="sidebar-item"><span class="icon">👥</span>Tenant Groups</div>
+  <div class="sidebar-item"><span class="icon">📋</span>Plans &amp; Add-ons</div>
+  <div class="sidebar-item"><span class="icon">🚀</span>Onboarding</div>
+  <div class="sidebar-item"><span class="icon">🚪</span>Offboarding</div>
+  <div class="sidebar-section-label">Monitoring</div>
+  <div class="sidebar-item"><span class="icon">❤️</span>System Health</div>
+  <div class="sidebar-item"><span class="icon">📊</span>Usage &amp; Analytics</div>
+  <div class="sidebar-item"><span class="icon">🔄</span>Database Sync</div>
+  <div class="sidebar-item"><span class="icon">⚙️</span>Jobs &amp; Automations</div>
+  <div class="sidebar-item"><span class="icon">📝</span>Audit Logs</div>
+  <div class="sidebar-section-label">Billing &amp; Finance</div>
+  <div class="sidebar-item"><span class="icon">💳</span>Billing Overview</div>
+  <div class="sidebar-item"><span class="icon">🧾</span>Invoices</div>
+  <div class="sidebar-item"><span class="icon">💸</span>Payments</div>
+  <div class="sidebar-item"><span class="icon">📈</span>Revenue Analytics</div>
+  <div class="sidebar-section-label">Administration</div>
+  <a href="users-roles.html" class="sidebar-item active"><span class="icon">👤</span>Users &amp; Roles</a>
+  <div class="sidebar-item"><span class="icon">🔌</span>Integrations</div>
+  <div class="sidebar-item"><span class="icon">🔔</span>Notifications</div>
+  <div class="sidebar-item"><span class="icon">🛡️</span>Risk &amp; Compliance</div>
+  <div class="sidebar-item"><span class="icon">⚙️</span>Settings</div>
+  <div class="collapse-btn">◀ Collapse</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">
+      <h1>Users &amp; Roles</h1>
+      <p>Manage FMGaming admin users and their access levels</p>
+    </div>
+    <div class="topbar-controls">
+      <div class="avatar">A</div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <input class="search-input" type="text" placeholder="🔍 Search users..." oninput="filterUsers()"/>
+    <select class="filter-select" id="roleFilter" onchange="filterUsers()">
+      <option value="">All Roles</option>
+      <option>Super Admin</option><option>Admin</option><option>Support Agent</option>
+      <option>Billing Manager</option><option>Read Only</option><option>Custom</option>
+    </select>
+    <select class="filter-select" id="statusFilter" onchange="filterUsers()">
+      <option value="">All Status</option><option>Active</option><option>Inactive</option>
+    </select>
+    <button class="btn-create" onclick="newUser()">+ Create New User</button>
+  </div>
+
+  <div class="content-area">
+
+    <!-- USER TABLE -->
+    <div class="user-table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- FORM PANEL -->
+    <div class="form-panel">
+      <div class="panel-header">
+        <h2 id="panelTitle">Create New User</h2>
+      </div>
+      <div class="panel-body" id="panelBody">
+
+        <!-- AVATAR -->
+        <div class="avatar-uploader">
+          <div class="avatar-big" id="avatarBig" onclick="document.getElementById('avatarInput').click()">
+            <img id="avatarImg" src="" alt=""/>
+            <span id="avatarInitials">?</span>
+            <div class="upload-hint">📷<br/>Change</div>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)"/>
+          </div>
+          <div class="avatar-info">
+            <div style="font-size:13px;font-weight:600;color:#1a1f36;">Profile Photo</div>
+            <p>Click avatar to upload<br/>JPG, PNG — max 1 MB</p>
+          </div>
+        </div>
+
+        <!-- IDENTITY -->
+        <div>
+          <div class="section-divider" style="margin-bottom:12px;">Identity</div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="field-label">First Name</label>
+              <input type="text" id="fFirstName" placeholder="First name" oninput="updateAvatarInitials()"/>
+            </div>
+            <div class="form-group">
+              <label class="field-label">Last Name</label>
+              <input type="text" id="fLastName" placeholder="Last name" oninput="updateAvatarInitials()"/>
+            </div>
+            <div class="form-group full">
+              <label class="field-label">Email Address</label>
+              <input type="email" id="fEmail" placeholder="user@fmgaming.com"/>
+            </div>
+            <div class="form-group full" id="passwordField">
+              <label class="field-label">Set Password</label>
+              <input type="password" id="fPassword" placeholder="Minimum 8 characters"/>
+            </div>
+            <div class="form-group full" id="resetField" style="display:none;">
+              <label class="field-label">Password</label>
+              <button class="btn btn-outline" onclick="showToast('Reset link sent!','success')" style="width:100%;text-align:left;">✉️ Send Password Reset Link</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROLE -->
+        <div>
+          <div class="section-divider" style="margin-bottom:12px;">Access Level</div>
+          <div class="role-cards" id="roleCards">
+            <div class="role-card selected" onclick="selectRole(this,'Super Admin')">
+              <div class="rc-icon">👑</div>
+              <div class="rc-name">Super Admin</div>
+              <div class="rc-desc">Full access including billing and tenant deletion</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Admin')">
+              <div class="rc-icon">🛠</div>
+              <div class="rc-name">Admin</div>
+              <div class="rc-desc">Manage tenants, users, and platform settings</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Support Agent')">
+              <div class="rc-icon">🎧</div>
+              <div class="rc-name">Support Agent</div>
+              <div class="rc-desc">View tenants and respond to support issues</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Billing Manager')">
+              <div class="rc-icon">💳</div>
+              <div class="rc-name">Billing Manager</div>
+              <div class="rc-desc">Manage billing, invoices and payments only</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Read Only')">
+              <div class="rc-icon">👁</div>
+              <div class="rc-name">Read Only</div>
+              <div class="rc-desc">View-only access to all dashboard sections</div>
+            </div>
+            <div class="role-card" onclick="selectRole(this,'Custom')">
+              <div class="rc-icon">⚙️</div>
+              <div class="rc-name">Custom</div>
+              <div class="rc-desc">Define specific permissions manually</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CUSTOM PERMISSIONS -->
+        <div id="customPermsSection" style="display:none;">
+          <div class="section-divider" style="margin-bottom:12px;">Custom Permissions</div>
+          <div class="perm-section">
+            <div class="perm-section-title">Tenants</div>
+            <div class="perm-checkboxes">
+              <label class="perm-check"><input type="checkbox"/>View</label>
+              <label class="perm-check"><input type="checkbox"/>Create</label>
+              <label class="perm-check"><input type="checkbox"/>Edit</label>
+              <label class="perm-check"><input type="checkbox"/>Delete</label>
+              <label class="perm-check"><input type="checkbox"/>Suspend</label>
+            </div>
+          </div>
+          <div class="perm-section">
+            <div class="perm-section-title">Billing</div>
+            <div class="perm-checkboxes">
+              <label class="perm-check"><input type="checkbox"/>View</label>
+              <label class="perm-check"><input type="checkbox"/>Create Invoices</label>
+              <label class="perm-check"><input type="checkbox"/>Process Payments</label>
+              <label class="perm-check"><input type="checkbox"/>Refunds</label>
+            </div>
+          </div>
+          <div class="perm-section">
+            <div class="perm-section-title">Users</div>
+            <div class="perm-checkboxes">
+              <label class="perm-check"><input type="checkbox"/>View</label>
+              <label class="perm-check"><input type="checkbox"/>Create</label>
+              <label class="perm-check"><input type="checkbox"/>Edit</label>
+              <label class="perm-check"><input type="checkbox"/>Delete</label>
+            </div>
+          </div>
+          <div class="perm-section">
+            <div class="perm-section-title">Reports &amp; Settings</div>
+            <div class="perm-checkboxes">
+              <label class="perm-check"><input type="checkbox"/>View Reports</label>
+              <label class="perm-check"><input type="checkbox"/>Export Reports</label>
+              <label class="perm-check"><input type="checkbox"/>View Settings</label>
+              <label class="perm-check"><input type="checkbox"/>Edit Settings</label>
+              <label class="perm-check"><input type="checkbox"/>Audit Logs</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- PERMISSION MATRIX (non-custom roles) -->
+        <div id="permMatrixSection">
+          <div class="section-divider" style="margin-bottom:12px;">Permission Summary</div>
+          <div class="perm-matrix">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th style="text-align:left;font-size:10px;color:#6b7394;padding:5px 8px;">Area</th>
+                  <th style="font-size:10px;color:#6b7394;padding:5px 8px;text-align:center;">View</th>
+                  <th style="font-size:10px;color:#6b7394;padding:5px 8px;text-align:center;">Create</th>
+                  <th style="font-size:10px;color:#6b7394;padding:5px 8px;text-align:center;">Edit</th>
+                  <th style="font-size:10px;color:#6b7394;padding:5px 8px;text-align:center;">Delete</th>
+                </tr>
+              </thead>
+              <tbody id="permMatrixBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ACCOUNT SETTINGS -->
+        <div>
+          <div class="section-divider" style="margin-bottom:4px;">Account Settings</div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="tl">Account Status</div><div class="ts">Active users can log in to the dashboard</div></div>
+            <div class="toggle-switch on" id="userStatusToggle" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="tl">Require Two-Factor Auth</div><div class="ts">User must set up 2FA before accessing dashboard</div></div>
+            <div class="toggle-switch off" onclick="toggleSwitch(this)"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 0;border-top:1px solid #f0f2f5;">
+            <input type="checkbox" id="notifyEmail" checked style="accent-color:#0d9488;width:14px;height:14px;"/>
+            <label for="notifyEmail" style="font-size:12px;color:#4a5278;cursor:pointer;">Send welcome email with login instructions</label>
+          </div>
+        </div>
+
+      </div>
+      <div class="panel-footer">
+        <button class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+        <button class="btn btn-teal" onclick="saveUser()" style="flex:1;">Save User</button>
+        <button class="btn btn-danger" id="deleteUserBtn" style="display:none;" onclick="openDeleteModal()">Delete</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>Delete User</h3>
+    <p id="deleteModalDesc">Are you sure you want to delete this user? This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn" style="background:#dc2626;color:#fff;" onclick="confirmDeleteUser()">Delete User</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const ROLE_COLORS = {
+  'Super Admin':'#7c3aed','Admin':'#0d9488','Support Agent':'#1d4ed8',
+  'Billing Manager':'#c2410c','Read Only':'#6b7394','Custom':'#166534'
+};
+const ROLE_CLASS = {
+  'Super Admin':'role-super','Admin':'role-admin','Support Agent':'role-support',
+  'Billing Manager':'role-billing','Read Only':'role-readonly','Custom':'role-custom'
+};
+const PERM_MATRIX = {
+  'Super Admin': {Tenants:[1,1,1,1],Billing:[1,1,1,1],Users:[1,1,1,1],Reports:[1,1],Settings:[1,1],System:[1,1,1]},
+  'Admin':       {Tenants:[1,1,1,0],Billing:[1,1,1,0],Users:[1,1,1,0],Reports:[1,1],Settings:[1,1],System:[1,1,1]},
+  'Support Agent':{Tenants:[1,0,0,0],Billing:[1,0,0,0],Users:[1,0,0,0],Reports:[1,0],Settings:[1,0],System:[1,0,0]},
+  'Billing Manager':{Tenants:[1,0,0,0],Billing:[1,1,1,1],Users:[0,0,0,0],Reports:[1,1],Settings:[0,0],System:[0,0,0]},
+  'Read Only':   {Tenants:[1,0,0,0],Billing:[1,0,0,0],Users:[1,0,0,0],Reports:[1,0],Settings:[1,0],System:[1,0,0]},
+};
+
+let USERS = [
+  {id:1,first:'Admin',last:'User',email:'jmercier2020@gmail.com',role:'Super Admin',status:'Active',lastLogin:'Jun 16, 2026',color:'#0d9488'},
+  {id:2,first:'Sarah',last:'Chen',email:'sarah.chen@fmgaming.com',role:'Admin',status:'Active',lastLogin:'Jun 15, 2026',color:'#3b5bdb'},
+  {id:3,first:'Mike',last:'Torres',email:'mike.torres@fmgaming.com',role:'Support Agent',status:'Active',lastLogin:'Jun 14, 2026',color:'#7c3aed'},
+  {id:4,first:'Lisa',last:'Park',email:'lisa.park@fmgaming.com',role:'Billing Manager',status:'Active',lastLogin:'Jun 10, 2026',color:'#d97706'},
+  {id:5,first:'Dev',last:'Account',email:'dev@fmgaming.com',role:'Read Only',status:'Inactive',lastLogin:'May 28, 2026',color:'#6b7394'},
+  {id:6,first:'James',last:'Wilson',email:'j.wilson@fmgaming.com',role:'Admin',status:'Active',lastLogin:'Jun 12, 2026',color:'#0f766e'},
+];
+let nextId=7;
+let editingUserId=null;
+let selectedRole='Super Admin';
+
+function initials(u){return (u.first[0]+(u.last[0]||'')).toUpperCase();}
+
+function renderUsers(){
+  const q=(document.querySelector('.search-input')||{value:''}).value.toLowerCase();
+  const rf=document.getElementById('roleFilter').value;
+  const sf=document.getElementById('statusFilter').value;
+  const filtered=USERS.filter(u=>{
+    const nameMatch=(u.first+' '+u.last+' '+u.email).toLowerCase().includes(q);
+    const roleMatch=!rf||u.role===rf;
+    const statusMatch=!sf||u.status===sf;
+    return nameMatch&&roleMatch&&statusMatch;
+  });
+  const tbody=document.getElementById('userTableBody');
+  tbody.innerHTML=filtered.map(u=>`
+    <tr onclick="editUser(${u.id})" class="${editingUserId===u.id?'selected':''}">
+      <td>
+        <div class="user-cell">
+          <div class="u-avatar" style="background:${u.color};">${initials(u)}</div>
+          <div><div class="u-name">${u.first} ${u.last}</div><div class="u-email">${u.email}</div></div>
+        </div>
+      </td>
+      <td><span class="role-badge ${ROLE_CLASS[u.role]||'role-readonly'}">${u.role}</span></td>
+      <td><span class="status-pill status-${u.status.toLowerCase()}">${u.status==='Active'?'● Active':'● Inactive'}</span></td>
+      <td style="font-size:12px;color:#6b7394;">${u.lastLogin}</td>
+      <td><button class="btn-edit" onclick="event.stopPropagation();editUser(${u.id})">Edit</button></td>
+    </tr>`).join('');
+}
+
+function filterUsers(){renderUsers();}
+
+function selectRole(card, role){
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedRole=role;
+  document.getElementById('customPermsSection').style.display=role==='Custom'?'block':'none';
+  document.getElementById('permMatrixSection').style.display=role==='Custom'?'none':'block';
+  if(role!=='Custom') renderPermMatrix(role);
+}
+
+function renderPermMatrix(role){
+  const m=PERM_MATRIX[role]||{};
+  const areas=[
+    {name:'Tenants',perms:m.Tenants||[0,0,0,0]},
+    {name:'Billing',perms:m.Billing||[0,0,0,0]},
+    {name:'Users',perms:m.Users||[0,0,0,0]},
+    {name:'Reports',perms:(m.Reports||[0,0]).concat([0,0])},
+    {name:'Settings',perms:(m.Settings||[0,0]).concat([0,0])},
+  ];
+  document.getElementById('permMatrixBody').innerHTML=areas.map(a=>`
+    <tr style="border-top:1px solid #f0f2f5;">
+      <td style="padding:5px 8px;font-size:11px;font-weight:600;color:#4a5278;">${a.name}</td>
+      ${a.perms.map(p=>`<td style="padding:5px 8px;text-align:center;">${p?'<span class="check-yes">✓</span>':'<span class="check-no">—</span>'}</td>`).join('')}
+    </tr>`).join('');
+}
+
+function newUser(){
+  editingUserId=null;
+  document.getElementById('panelTitle').textContent='Create New User';
+  document.getElementById('deleteUserBtn').style.display='none';
+  document.getElementById('passwordField').style.display='block';
+  document.getElementById('resetField').style.display='none';
+  // clear form
+  document.getElementById('fFirstName').value='';
+  document.getElementById('fLastName').value='';
+  document.getElementById('fEmail').value='';
+  document.getElementById('fPassword').value='';
+  document.getElementById('avatarInitials').textContent='?';
+  document.getElementById('avatarBig').style.background='#0d9488';
+  document.getElementById('avatarImg').style.display='none';
+  document.getElementById('avatarImg').src='';
+  document.getElementById('userStatusToggle').className='toggle-switch on';
+  // reset role to Super Admin
+  document.querySelectorAll('.role-card')[0].click();
+  selectedRole='Super Admin';
+  renderUsers();
+}
+
+function editUser(id){
+  const u=USERS.find(x=>x.id===id); if(!u) return;
+  editingUserId=id;
+  document.getElementById('panelTitle').textContent='Edit User: '+u.first+' '+u.last;
+  document.getElementById('deleteUserBtn').style.display='block';
+  document.getElementById('passwordField').style.display='none';
+  document.getElementById('resetField').style.display='block';
+  document.getElementById('fFirstName').value=u.first;
+  document.getElementById('fLastName').value=u.last;
+  document.getElementById('fEmail').value=u.email;
+  document.getElementById('avatarInitials').textContent=initials(u);
+  document.getElementById('avatarBig').style.background=u.color;
+  document.getElementById('avatarImg').style.display='none';
+  document.getElementById('userStatusToggle').className='toggle-switch '+(u.status==='Active'?'on':'off');
+  // set role
+  const cards=document.querySelectorAll('.role-card');
+  cards.forEach(c=>{
+    if(c.querySelector('.rc-name').textContent===u.role){c.click();}
+  });
+  renderUsers();
+}
+
+function saveUser(){
+  const first=document.getElementById('fFirstName').value.trim();
+  const last=document.getElementById('fLastName').value.trim();
+  const email=document.getElementById('fEmail').value.trim();
+  if(!first||!email){showToast('First name and email are required.','error');return;}
+  const status=document.getElementById('userStatusToggle').classList.contains('on')?'Active':'Inactive';
+  if(editingUserId){
+    const u=USERS.find(x=>x.id===editingUserId);
+    Object.assign(u,{first,last,email,role:selectedRole,status});
+    showToast('User updated successfully!','success');
+  } else {
+    const colors=['#0d9488','#3b5bdb','#7c3aed','#d97706','#0f766e','#1d4ed8','#ef4444'];
+    USERS.push({id:nextId++,first,last,email,role:selectedRole,status,lastLogin:'Just now',color:colors[Math.floor(Math.random()*colors.length)]});
+    showToast('User created successfully!','success');
+  }
+  renderUsers();
+}
+
+function cancelEdit(){newUser();}
+
+function updateAvatarInitials(){
+  const f=document.getElementById('fFirstName').value;
+  const l=document.getElementById('fLastName').value;
+  document.getElementById('avatarInitials').textContent=((f[0]||'')+(l[0]||'')).toUpperCase()||'?';
+}
+
+function uploadAvatar(input){
+  const file=input.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const img=document.getElementById('avatarImg');
+    img.src=ev.target.result; img.style.display='block';
+    document.getElementById('avatarInitials').style.display='none';
+  };
+  r.readAsDataURL(file);
+}
+
+function toggleSwitch(el){
+  el.classList.toggle('on');
+  el.classList.toggle('off');
+}
+
+let deleteTargetId=null;
+function openDeleteModal(){
+  deleteTargetId=editingUserId;
+  const u=USERS.find(x=>x.id===editingUserId);
+  document.getElementById('deleteModalDesc').textContent=`Delete ${u.first} ${u.last}? This cannot be undone.`;
+  document.getElementById('deleteModal').classList.add('show');
+}
+function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('show');}
+function confirmDeleteUser(){
+  USERS=USERS.filter(x=>x.id!==deleteTargetId);
+  closeDeleteModal();
+  showToast('User deleted.','success');
+  newUser();
+  renderUsers();
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(type==='error'?' error':'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// init
+renderPermMatrix('Super Admin');
+renderUsers();
+</script>
+</body>
+</html>
